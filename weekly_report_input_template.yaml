@@ -1,0 +1,14 @@
+name: ""
+role: ""
+name_for_file: ""
+week: ""
+weekly_objective: ""
+execution_output: []
+transformation_log:
+  ai_acceleration_tasks: []
+sop_process_solidification:
+  items:
+    - item: None
+      impact: N/A
+friction_blockers_ask: []
+next_week_focus: []
