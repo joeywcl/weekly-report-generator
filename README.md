@@ -38,6 +38,11 @@ The easiest way to fill out your weekly report!
 - By default, drafts are saved locally in your browser (per user / per device).
 - Optional: set `WEEKLY_REPORT_PERSIST_YAML=1` to also persist the last submitted form to a YAML file on the server (not recommended for multi-user deployments).
 
+### Formatting rules
+
+- Empty fields render as `N/A` in the generated Word document.
+- Bullets only render when they are on their own line starting with `- ` (avoid inline bullets like `Sentence. - Bullet`).
+
 ## 💻 Command-Line Interface
 
 If you prefer the command line:
