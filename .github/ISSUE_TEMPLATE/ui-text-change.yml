@@ -13,7 +13,7 @@ body:
     id: where
     attributes:
       label: Where is it on the page?
-      description: "For example: Basic Information section, or AI Assist panel."
+      description: "For example: Basic Information section, or near the AI Assist panel."
       placeholder: "Name for filename field (top section)"
     validations:
       required: true
@@ -22,7 +22,8 @@ body:
     id: current
     attributes:
       label: What does it currently say?
-      placeholder: "e.g. Cheau Ling Wong"
+      description: "Copy the exact text you see (label/placeholder/hint/button)."
+      placeholder: "e.g. FirstName LastName"
     validations:
       required: true
 
@@ -40,9 +41,9 @@ body:
       label: Constraints
       description: "Optional, but helps keep changes small."
       options:
-        - label: Only change this text (no behavior changes)
-        - label: Do not change report generation output
-        - label: Do not change AI Assist behavior
+        - label: Wording/UI text only (no behavior changes)
+        - label: No changes to report output formatting
+        - label: No changes outside this page/section
 
   - type: textarea
     id: notes

@@ -1,0 +1,62 @@
+name: Feature Request
+description: Suggest an improvement or a new capability.
+title: "Feature: "
+labels: [enhancement]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Why is this feature needed?
+      placeholder: "It is hard to ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should the product do?
+      placeholder: "Add a button that ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What would make this feature complete?
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope (optional)
+      description: What should NOT change?
+      placeholder: "Do not change report output format" 
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Web UI
+        - AI Assist
+        - Word (DOCX) generation
+        - CLI
+        - Deployment/Server
+        - Other
+    validations:
+      required: true

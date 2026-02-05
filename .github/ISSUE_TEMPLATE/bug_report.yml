@@ -1,0 +1,72 @@
+name: Bug Report
+description: Report something that is broken or not working as expected.
+title: "Bug: "
+labels: [bug]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened?
+      description: Describe the problem.
+      placeholder: "When I click Generate Word Document, I get an error..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      placeholder: "A Word document downloads successfully."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Tell us how to reproduce the issue.
+      placeholder: |
+        1. Go to ...
+        2. Fill ...
+        3. Click ...
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Screenshots or error text (optional)
+      description: Paste any error message or attach a screenshot.
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did it happen?
+      options:
+        - Web UI
+        - AI Assist
+        - Word (DOCX) generation
+        - CLI (fill_weekly_report.py)
+        - Deployment/Server
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment (optional)
+      description: Browser/OS (for web bugs) or Python version (for CLI).
+      placeholder: "Chrome 121 on macOS" 
+    validations:
+      required: false
