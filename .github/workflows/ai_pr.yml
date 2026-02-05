@@ -47,7 +47,7 @@ jobs:
           COMMENT_BODY='${{ github.event.comment.body }}'
 
           # Remove the trigger line. Allow extra instructions after /ai-pr.
-          EXTRA_INSTRUCTIONS="$(printf '%s' "$COMMENT_BODY" | sed '1s#^/ai-pr##' | sed 's/^\s\+//' )"
+          EXTRA_INSTRUCTIONS="$(printf '%s' "$COMMENT_BODY" | sed '1s#^/ai-pr##' | sed 's/^[[:space:]]*//' )"
 
           RULES="$(cat AGENTS.md)"
 
