@@ -1,0 +1,113 @@
+name: AI Issue -> PR (aider)
+
+"on":
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+jobs:
+  ai_pr:
+    if: >-
+      github.event.issue.pull_request == null &&
+      startsWith(github.event.comment.body, '/ai-pr') &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: develop
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install aider
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install aider-chat
+
+      - name: Build prompt
+        id: prompt
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ISSUE_NUMBER='${{ github.event.issue.number }}'
+          ISSUE_TITLE='${{ github.event.issue.title }}'
+          ISSUE_BODY='${{ github.event.issue.body }}'
+          COMMENT_BODY='${{ github.event.comment.body }}'
+
+          # Remove the trigger line. Allow extra instructions after /ai-pr.
+          EXTRA_INSTRUCTIONS="$(printf '%s' "$COMMENT_BODY" | sed '1s#^/ai-pr##' | sed 's/^\s\+//' )"
+
+          RULES="$(cat AGENTS.md)"
+
+          cat > /tmp/aider_prompt.txt <<EOF
+          You are an AI coding agent operating inside a GitHub Actions workflow.
+
+          Follow these repo rules:
+          $RULES
+
+          Task: address GitHub issue #$ISSUE_NUMBER.
+
+          Issue title:
+          $ISSUE_TITLE
+
+          Issue body:
+          $ISSUE_BODY
+
+          Extra instructions (from the /ai-pr comment):
+          $EXTRA_INSTRUCTIONS
+
+          Requirements:
+          - Make the smallest correct change.
+          - Do not modify secrets or .env files.
+          - Do not change GitHub Actions workflows unless the issue explicitly requests it.
+          - After code changes, ensure: python -m py_compile app.py generate_weekly_report_from_template.py fill_weekly_report.py
+          EOF
+
+          echo "prompt_file=/tmp/aider_prompt.txt" >> "$GITHUB_OUTPUT"
+
+      - name: Run aider
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          # Provide a focused starting set of files; aider may still modify others if needed.
+          aider \
+            --model gpt-4o-mini \
+            --yes \
+            --message-file "${{ steps.prompt.outputs.prompt_file }}" \
+            app.py \
+            templates/index.html \
+            generate_weekly_report_from_template.py \
+            fill_weekly_report.py \
+            README.md \
+            requirements.txt
+
+      - name: Basic compile check
+        run: python -m py_compile app.py generate_weekly_report_from_template.py fill_weekly_report.py
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          base: develop
+          branch: ai/issue-${{ github.event.issue.number }}
+          delete-branch: true
+          title: "AI: #${{ github.event.issue.number }} ${{ github.event.issue.title }}"
+          body: |
+            Fixes #${{ github.event.issue.number }}.
+
+            Triggered by: @${{ github.actor }}
+          commit-message: "AI: address issue #${{ github.event.issue.number }}"
+          reviewers: joeywcl
