@@ -1,0 +1,53 @@
+name: UI Text / Placeholder Change
+description: Request a simple wording change in the web form.
+title: "UI: "
+labels: [ui]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when you want to change a label, placeholder, hint text, or button text.
+
+  - type: input
+    id: where
+    attributes:
+      label: Where is it on the page?
+      description: "For example: Basic Information section, or AI Assist panel."
+      placeholder: "Name for filename field (top section)"
+    validations:
+      required: true
+
+  - type: input
+    id: current
+    attributes:
+      label: What does it currently say?
+      placeholder: "e.g. Cheau Ling Wong"
+    validations:
+      required: true
+
+  - type: input
+    id: desired
+    attributes:
+      label: What should it say instead?
+      placeholder: "e.g. FirstName LastName"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      description: "Optional, but helps keep changes small."
+      options:
+        - label: Only change this text (no behavior changes)
+        - label: Do not change report generation output
+        - label: Do not change AI Assist behavior
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else?
+      description: Links/screenshots, or other context.
+    validations:
+      required: false
