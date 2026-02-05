@@ -124,6 +124,192 @@ def _normalize_report_text_fields(data: dict) -> dict:
     return data
 
 
+def _ensure_suggest_schema(out: dict) -> dict:
+    """Ensure /api/suggest output always has the expected keys and types."""
+    if not isinstance(out, dict):
+        return {
+            "weekly_objective": "",
+            "execution_output": [],
+            "ai_acceleration_tasks": [],
+            "next_week_focus": [],
+            "friction_blockers_ask": [],
+            "sop_items": [],
+        }
+
+    out.setdefault("weekly_objective", "")
+    out.setdefault("execution_output", [])
+    out.setdefault("ai_acceleration_tasks", [])
+    out.setdefault("next_week_focus", [])
+    out.setdefault("friction_blockers_ask", [])
+    out.setdefault("sop_items", [])
+
+    if not isinstance(out.get("weekly_objective"), str):
+        out["weekly_objective"] = str(out.get("weekly_objective") or "")
+
+    for k in (
+        "execution_output",
+        "ai_acceleration_tasks",
+        "next_week_focus",
+        "friction_blockers_ask",
+        "sop_items",
+    ):
+        if not isinstance(out.get(k), list):
+            out[k] = []
+
+    return out
+
+
+def _normalize_suggest_text_fields(out: dict) -> dict:
+    """Normalize bullet formatting for /api/suggest JSON shape."""
+    if not isinstance(out, dict):
+        return out
+
+    out["weekly_objective"] = _normalize_inline_bullets(out.get("weekly_objective", ""))
+
+    exe = out.get("execution_output")
+    if isinstance(exe, list):
+        for item in exe:
+            if not isinstance(item, dict):
+                continue
+            if "summary" in item and not isinstance(item.get("summary"), str):
+                item["summary"] = str(item.get("summary") or "")
+            if "content" in item:
+                item["content"] = _normalize_inline_bullets(item.get("content", ""))
+
+    tasks = out.get("ai_acceleration_tasks")
+    if isinstance(tasks, list):
+        for t in tasks:
+            if not isinstance(t, dict):
+                continue
+            if "insight_failure" in t:
+                t["insight_failure"] = _normalize_inline_bullets(
+                    t.get("insight_failure", "")
+                )
+
+    sop_items = out.get("sop_items")
+    if isinstance(sop_items, list):
+        for s in sop_items:
+            if not isinstance(s, dict):
+                continue
+            if "impact" in s:
+                s["impact"] = _normalize_inline_bullets(s.get("impact", ""))
+
+    fr = out.get("friction_blockers_ask")
+    if isinstance(fr, list):
+        for f in fr:
+            if not isinstance(f, dict):
+                continue
+            if "action_mitigation" in f:
+                f["action_mitigation"] = _normalize_inline_bullets(
+                    f.get("action_mitigation", "")
+                )
+            if "ask_attention_needed" in f:
+                f["ask_attention_needed"] = _normalize_inline_bullets(
+                    f.get("ask_attention_needed", "")
+                )
+
+    return out
+
+
+_ASK_SECTION_RE = re.compile(r"(?im)^\s*(ask|request|need|attention)\s*:\s*")
+_ACTION_SECTION_RE = re.compile(r"(?im)^\s*(action|mitigation)\s*:\s*")
+
+
+def _notes_has_explicit_ask(notes: str) -> bool:
+    return bool(_ASK_SECTION_RE.search(notes or ""))
+
+
+def _notes_has_explicit_action(notes: str) -> bool:
+    return bool(_ACTION_SECTION_RE.search(notes or ""))
+
+
+def _infer_mild_mitigation_from_friction(friction: str) -> str:
+    f = (friction or "").strip().lower()
+    if not f:
+        return ""
+    # Keep this generic: coordination/clarification only.
+    if any(w in f for w in ("backend", "api", "payload", "contract", "schema", "data")):
+        return "Aligned with backend on the required data contract for the frontend display."
+    return "Coordinated with relevant stakeholders to clarify requirements and unblock progress."
+
+
+def _postprocess_suggest(out: dict, notes: str) -> dict:
+    """Apply deterministic rules so Apply-to-form is predictable."""
+    if not isinstance(out, dict):
+        return out
+
+    has_ask = _notes_has_explicit_ask(notes)
+    has_action = _notes_has_explicit_action(notes)
+
+    # Do not invent asks.
+    if not has_ask:
+        fr_list = out.get("friction_blockers_ask")
+        if isinstance(fr_list, list):
+            for item in fr_list:
+                if isinstance(item, dict):
+                    item["ask_attention_needed"] = ""
+
+    # Allow mild mitigation inference if missing.
+    fr_list = out.get("friction_blockers_ask")
+    if isinstance(fr_list, list):
+        for item in fr_list:
+            if not isinstance(item, dict):
+                continue
+            friction = item.get("friction", "")
+            action = (item.get("action_mitigation") or "").strip()
+            if (not action) and (friction or "").strip():
+                # If notes explicitly had an Action section, prefer leaving it blank if model didn't provide.
+                # Otherwise, infer a mild mitigation.
+                if not has_action:
+                    item["action_mitigation"] = _infer_mild_mitigation_from_friction(
+                        friction
+                    )
+
+    # Ensure AI task insight/limitation is present when AI tasks exist.
+    tasks = out.get("ai_acceleration_tasks")
+    if isinstance(tasks, list):
+        for t in tasks:
+            if not isinstance(t, dict):
+                continue
+            if (t.get("task") or "").strip() and not (
+                t.get("insight_failure") or ""
+            ).strip():
+                t["insight_failure"] = (
+                    "- Helpful for scaffolding integration quickly and iterating on wiring\n"
+                    "- Still required manual verification against real data/contracts and edge cases"
+                )
+
+    # Weekly objective fallback: if empty but work exists, derive from summaries.
+    wo = (out.get("weekly_objective") or "").strip()
+    if not wo:
+        exe = out.get("execution_output")
+        if isinstance(exe, list):
+            summaries = []
+            for x in exe:
+                if isinstance(x, dict):
+                    s = (x.get("summary") or "").strip()
+                    if s:
+                        summaries.append(s)
+                if len(summaries) >= 2:
+                    break
+            if summaries:
+                if len(summaries) == 1:
+                    out["weekly_objective"] = f"Delivered {summaries[0]}."
+                else:
+                    out["weekly_objective"] = (
+                        f"Delivered {summaries[0]} and {summaries[1]}."
+                    )
+
+    # Keep objective to a single sentence.
+    wo = (out.get("weekly_objective") or "").strip()
+    if wo:
+        m = re.match(r"^(.+?[.!?])\s+", wo)
+        if m:
+            out["weekly_objective"] = m.group(1)
+
+    return out
+
+
 # Optional: set OPENAI_API_KEY in environment for AI assist
 def _openai_client(api_key=None):
     key = (api_key or "").strip() or os.environ.get("OPENAI_API_KEY", "").strip()
@@ -521,7 +707,7 @@ Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
 {
   "weekly_objective": "one sentence summary of what was done or achieved THIS WEEK (past/current only)",
   "execution_output": [{"summary": "bold one-liner", "content": "text and bullets. Use a line starting with - for each bullet."}],
-  "ai_acceleration_tasks": [{"task": "what you used AI for", "tool_agent": "OpenCode / Cursor / ...", "time_saved": "~0.5-2d or 1-4h", "insight_failure": "insight text. Use lines starting with - for bullets."}],
+  "ai_acceleration_tasks": [{"task": "what you used AI for", "tool_agent": "OpenCode / Cursor / ...", "time_saved": "~0.5-2d or 1-4h", "insight_failure": "insight/limitation text. Use lines starting with - for bullets."}],
   "next_week_focus": ["focus 1", "focus 2"],
   "friction_blockers_ask": [{"friction": "what blocked", "action_mitigation": "what you did", "ask_attention_needed": "what you need"}],
   "sop_items": [{"item": "SOP item name", "impact": "impact text. Use - for bullets."}]
@@ -530,6 +716,8 @@ Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
 CRITICAL:
 - weekly_objective = ONLY past/current week work (what was done or achieved). If the notes only mention future plans or "next week", leave weekly_objective as "" (empty string). Do NOT put next week's plans in weekly_objective.
 - next_week_focus = future plans (what will be done next week). Put items like "Frontend refactoring" here when notes say "next week" or similar.
+
+- weekly_objective MUST be exactly one short sentence (aim ~10-18 words). Outcome-oriented, no next-week content.
 
 FORMATTING + QUALITY BAR:
 - execution_output should be 2-5 items when the notes cover multiple themes/sections (e.g., "Design" + "Implementation" + "Deployment", or separate workstreams like "Facilities"/"Knowledge"/"Model hub"). Do NOT collapse everything into 1 generic item unless the notes truly describe only one small change.
@@ -545,10 +733,16 @@ TIME CLASSIFICATION (avoid misplacing content):
 - If the notes only mention AI usage (tool + task) but do not mention next week, do not invent next-week focus.
 
 Keep execution_output, ai_acceleration_tasks, next_week_focus, friction_blockers_ask, sop_items as arrays; use empty [] if nothing from the notes.
- Content and impact: use normal text; start a line with "- " for a bullet point."""
+  Content and impact: use normal text; start a line with "- " for a bullet point."""
 
 # Bullet formatting guardrail: bullets MUST be on their own lines.
 SUGGEST_SYSTEM += "\n\nBULLETS: Do NOT write inline bullets like 'Sentence. - Bullet'. Always put bullets on a new line starting with '- '."
+
+# AI tasks: always return a useful Insight/Limitation when an AI task is present.
+SUGGEST_SYSTEM += "\n\nAI TASKS: If ai_acceleration_tasks has any items and the notes do not provide an explicit insight/limitation, write 1-2 generic bullets in insight_failure describing what worked and a limitation. Do not invent project-specific facts."
+
+# Asks: do not invent asks.
+SUGGEST_SYSTEM += "\n\nASKS: Keep friction_blockers_ask[].ask_attention_needed as an empty string unless the notes explicitly include an Ask/Request/Need section or phrasing."
 
 
 @app.route("/api/suggest", methods=["POST"])
@@ -580,28 +774,10 @@ def api_suggest():
             raw = re.sub(r"^```(?:json)?\s*", "", raw)
             raw = re.sub(r"\s*```$", "", raw)
         out = json.loads(raw)
-        # Safety net: ensure bullets render even if model returns inline '- bullet'.
         if isinstance(out, dict):
-            out = _normalize_report_text_fields(
-                {
-                    "execution_output": out.get("execution_output"),
-                    "transformation_log": {
-                        "ai_acceleration_tasks": out.get("ai_acceleration_tasks")
-                    },
-                    "sop_process_solidification": {"items": out.get("sop_items")},
-                    "friction_blockers_ask": out.get("friction_blockers_ask"),
-                }
-            )
-            # Map back to API shape.
-            out["execution_output"] = out.get("execution_output")
-            out["ai_acceleration_tasks"] = (out.get("transformation_log") or {}).get(
-                "ai_acceleration_tasks", []
-            )
-            out["sop_items"] = (out.get("sop_process_solidification") or {}).get(
-                "items", []
-            )
-            out.pop("transformation_log", None)
-            out.pop("sop_process_solidification", None)
+            out = _ensure_suggest_schema(out)
+            out = _normalize_suggest_text_fields(out)
+            out = _postprocess_suggest(out, notes)
         return jsonify(out)
     except json.JSONDecodeError as e:
         return jsonify({"error": f"Invalid JSON from model: {e}"}), 502

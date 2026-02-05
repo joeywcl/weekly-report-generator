@@ -700,7 +700,7 @@ Execution &amp; Output:
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>Insight / Failure</label>
+                                <label>Insight / Limitation</label>
                                 <textarea name="ai_task_{{ loop.index0 }}_insight_failure" placeholder="What worked well or what didn't. Start a line with - for a bullet." rows="4">{{ task.insight_failure }}</textarea>
                                 <small class="field-hint">Start a line with <code>-</code> for a bullet; other lines are normal text.</small>
                             </div>
@@ -1003,7 +1003,7 @@ Execution &amp; Output:
                 wrapper.appendChild(grid);
 
                 const g4 = _createEl('div', 'form-group');
-                g4.appendChild(_createEl('label', null, 'Insight / Failure'));
+                g4.appendChild(_createEl('label', null, 'Insight / Limitation'));
                 const ins = document.createElement('textarea');
                 ins.name = `ai_task_${index}_insight_failure`;
                 ins.rows = 4;
@@ -1501,7 +1501,7 @@ Execution &amp; Output:
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Insight / Failure</label>
+                            <label>Insight / Limitation</label>
                             <textarea name="ai_task_${index}_insight_failure" placeholder="What worked well or what didn't. Start a line with - for a bullet." rows="4">${normalizeInlineBullets(t.insight_failure || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                             <small class="field-hint">Start a line with <code>-</code> for a bullet; other lines are normal text.</small>
                         </div>
@@ -1620,7 +1620,7 @@ Execution &amp; Output:
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Insight / Failure</label>
+                    <label>Insight / Limitation</label>
                     <textarea name="ai_task_${index}_insight_failure" placeholder="What worked well or what didn't. Start a line with - for a bullet." rows="4"></textarea>
                     <small class="field-hint">Start a line with <code>-</code> for a bullet; other lines are normal text.</small>
                 </div>

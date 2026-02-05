@@ -334,7 +334,7 @@ def main():
         )
         last = insert_paragraph_after_runs_i(
             last,
-            [("Insight / Failure:", True)],
+            [("Insight / Limitation:", True)],
             style=style,
             left_indent_in=indent_in,
         )
