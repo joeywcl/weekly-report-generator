@@ -12,3 +12,4 @@ Weekly_Report_Generated_From_Template_v3.docx
 # OS / IDE
 .DS_Store
 .idea/
+.aider*
