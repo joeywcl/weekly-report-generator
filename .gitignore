@@ -13,3 +13,5 @@ Weekly_Report_Generated_From_Template_v3.docx
 .DS_Store
 .idea/
 .aider*
+*.private.md
+DEPLOYMENT.md
