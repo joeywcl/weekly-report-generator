@@ -147,15 +147,12 @@ python app.py
 # Open http://127.0.0.1:5000 in your browser
 ```
 
-## 🧰 Production (VM)
+## 🧰 Production
 
-📖 **See [DEPLOYMENT.md](DEPLOYMENT.md)** for Docker, free hosting options, and auto-deploy workflows.
+Run with gunicorn for production:
+```bash
+pip install -r requirements.txt gunicorn
+gunicorn -w 2 -b 0.0.0.0:5000 app:app
+```
 
-- Run behind a WSGI server (recommended: gunicorn):
-  ```bash
-  pip install -r requirements.txt
-  export HOST=0.0.0.0
-  export PORT=5000
-  gunicorn -w 2 -b 0.0.0.0:${PORT} app:app
-  ```
-- For multi-user deployments, keep `WEEKLY_REPORT_PERSIST_YAML` **off** (default) so the server stays stateless; drafts live in each user’s browser.
+For multi-user deployments, keep `WEEKLY_REPORT_PERSIST_YAML` **off** (default) so drafts stay in each user's browser.
