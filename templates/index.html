@@ -721,8 +721,8 @@ Execution &amp; Output:
                     </div>
                     <div class="form-group">
                         <label for="name_for_file">Name for filename</label>
-                        <input type="text" id="name_for_file" name="name_for_file" value="{{ defaults.name_for_file }}" placeholder="e.g. [CAP Weekly Report] Cheau Ling Wong">
-                        <small class="field-hint">Enter your desired filename (without .docx). Example: "[CAP Weekly Report] Cheau Ling Wong" or just "Cheau Ling Wong". Leave blank to use your name above.</small>
+                        <input type="text" id="name_for_file" name="name_for_file" value="{{ defaults.name_for_file }}" placeholder="e.g. [CAP Weekly Report] FirstName LastName">
+                        <small class="field-hint">Enter your desired filename (without .docx). Example: "[CAP Weekly Report] FirstName LastName" or just "FirstName LastName". Leave blank to use your name above.</small>
                     </div>
                     <div class="form-group">
                         <label for="week-calendar">Week *</label>
@@ -969,9 +969,9 @@ Execution &amp; Output:
 
             document.querySelectorAll('#friction-list .friction-item').forEach((row) => {
                 const friction = (row.querySelector('input[name="friction_friction[]"]') || {}).value || '';
-                const action_mitigation = (row.querySelector('input[name="friction_action_mitigation[]"]') || {}).value || '';
-                const ask_attention_needed = (row.querySelector('input[name="friction_ask_attention[]"]') || {}).value || '';
-                data.friction_blockers_ask.push({ friction, action_mitigation, ask_attention_needed });
+                const action = (row.querySelector('input[name="friction_action_mitigation[]"]') || {}).value || '';
+                const ask = (row.querySelector('input[name="friction_ask_attention[]"]') || {}).value || '';
+                data.friction_blockers_ask.push({ friction, action_mitigation: action, ask_attention_needed: ask });
             });
 
             document.querySelectorAll('#next-week-list .focus-item').forEach((row) => {
@@ -1392,7 +1392,7 @@ Execution &amp; Output:
                 <div class="form-group">
                     <label>Content</label>
                     <textarea name="execution_content[]" placeholder="Type normally for text. Start a line with - for a bullet." rows="6"></textarea>
-                    <small class="field-hint">Start a line with - for a bullet; other lines are normal text.</small>
+                    <small class="field-hint">Start a line with <code>-</code> for a bullet; other lines are normal text.</small>
                 </div>
             `;
             container.appendChild(div);
