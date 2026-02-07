@@ -1,0 +1,70 @@
+name: CI Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+      
+      - name: Lint and format check with ruff
+        run: |
+          # Check for linting issues
+          ruff check . --output-format=github
+          # Check formatting (like black --check)
+          ruff format --check .
+      
+      - name: Verify Python modules import successfully
+        run: |
+          python -m py_compile app.py
+          python -m py_compile generate_weekly_report_from_template.py
+          python -m py_compile fill_weekly_report.py
+          python -c "import app; print('✓ app.py imports successfully')"
+          python -c "import generate_weekly_report_from_template; print('✓ generate_weekly_report_from_template.py imports successfully')"
+          python -c "import fill_weekly_report; print('✓ fill_weekly_report.py imports successfully')"
+      
+      - name: Check for VERSION file
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "❌ VERSION file is missing"
+            exit 1
+          fi
+          echo "✓ VERSION file exists: $(cat VERSION)"
+      
+      - name: Verify Flask app can initialize
+        env:
+          OPENAI_API_KEY: "test-key-for-ci"
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from app import app
+          with app.app_context():
+              print('✓ Flask app initializes successfully')
+          "

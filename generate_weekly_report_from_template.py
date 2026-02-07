@@ -1,15 +1,15 @@
 import argparse
-from pathlib import Path
-import yaml
 from datetime import datetime, timedelta
-from typing import Optional
+from pathlib import Path
+
+import yaml
 from docx import Document
+from docx.oxml import OxmlElement
 from docx.shared import Inches
 from docx.text.paragraph import Paragraph
-from docx.oxml import OxmlElement
 
 
-def get_week_range(today: Optional[datetime] = None) -> str:
+def get_week_range(today: datetime | None = None) -> str:
     """Calculate week range (Monday to Friday) for the given date (defaults to today)."""
     today = today or datetime.now()
     monday = today - timedelta(days=today.weekday())
@@ -48,7 +48,7 @@ def insert_paragraph_after_runs(paragraph: Paragraph, runs: list, style: str = N
     return new_para
 
 
-def _set_left_indent(paragraph: Paragraph, left_indent_in: Optional[float]):
+def _set_left_indent(paragraph: Paragraph, left_indent_in: float | None):
     if left_indent_in is None:
         return
     paragraph.paragraph_format.left_indent = Inches(left_indent_in)
@@ -58,7 +58,7 @@ def insert_paragraph_after_i(
     paragraph: Paragraph,
     text: str,
     style: str = None,
-    left_indent_in: Optional[float] = None,
+    left_indent_in: float | None = None,
 ):
     p = insert_paragraph_after(paragraph, text, style=style)
     _set_left_indent(p, left_indent_in)
@@ -69,7 +69,7 @@ def insert_paragraph_after_runs_i(
     paragraph: Paragraph,
     runs: list,
     style: str = None,
-    left_indent_in: Optional[float] = None,
+    left_indent_in: float | None = None,
 ):
     p = insert_paragraph_after_runs(paragraph, runs, style=style)
     _set_left_indent(p, left_indent_in)
@@ -81,7 +81,7 @@ def insert_label_value(
     label: str,
     value: str,
     style: str,
-    left_indent_in: Optional[float] = None,
+    left_indent_in: float | None = None,
 ):
     """Insert a single line: bold label + normal value."""
     return insert_paragraph_after_runs_i(
@@ -97,7 +97,7 @@ def insert_label_value_block(
     label: str,
     value: str,
     style: str,
-    left_indent_in: Optional[float] = None,
+    left_indent_in: float | None = None,
 ):
     """Insert label/value on same line when simple, otherwise label then parsed content."""
     v = (value or "").strip("\n")
@@ -120,7 +120,7 @@ def insert_content_parsed(
     anchor: Paragraph,
     content: str,
     style: str = "Normal",
-    left_indent_in: Optional[float] = None,
+    left_indent_in: float | None = None,
 ):
     """Insert content where lines starting with '-' are bullets, others are normal text.
 
