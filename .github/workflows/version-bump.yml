@@ -1,0 +1,66 @@
+name: Auto Version Bump
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'VERSION'
+      - '**.md'
+
+jobs:
+  bump-version:
+    if: "!contains(github.event.head_commit.message, 'chore: bump version')"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          # Check commit message for version bump type
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          
+          if [[ "$COMMIT_MSG" =~ ^feat(\(.*\))?!:|^fix(\(.*\))?!:|BREAKING ]]; then
+            echo "type=major" >> "$GITHUB_OUTPUT"
+          elif [[ "$COMMIT_MSG" =~ ^feat(\(.*\))?: ]]; then
+            echo "type=minor" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+          fi
+      
+      - name: Bump version
+        run: |
+          chmod +x bump_version.sh
+          ./bump_version.sh ${{ steps.bump_type.outputs.type }}
+      
+      - name: Get new version
+        id: version
+        run: echo "new_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+      
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+          git tag "v${{ steps.version.outputs.new_version }}"
+          git push origin main --tags
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          release_name: Release v${{ steps.version.outputs.new_version }}
+          body: |
+            Auto-generated release v${{ steps.version.outputs.new_version }}
+            
+            Commit: ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false

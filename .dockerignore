@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application
+*.docx
+!Weekly_Report_Template.docx
+weekly_report_*.yaml
+!weekly_report_input_template.yaml
+.env
+
+# Data
+data/
+*.sqlite3
+
+# Docker
+.dockerignore

@@ -46,6 +46,16 @@ import tempfile
 
 app = Flask(__name__)
 
+# Read version from VERSION file
+def get_version():
+    try:
+        with open(Path(__file__).parent / "VERSION", "r") as f:
+            return f.read().strip()
+    except:
+        return "dev"
+
+__version__ = get_version()
+
 
 def _env_bool(name: str, default: bool = False) -> bool:
     v = os.environ.get(name)
@@ -539,12 +549,12 @@ def index():
     if not defaults["sop_items"]:
         defaults["sop_items"] = [{"item": "None", "impact": "N/A"}]
 
-    return render_template("index.html", defaults=defaults)
+    return render_template("index.html", defaults=defaults, version=__version__)
 
 
 @app.route("/health")
 def health():
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "version": __version__})
 
 
 @app.route("/generate", methods=["POST"])

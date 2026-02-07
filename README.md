@@ -149,6 +149,8 @@ python app.py
 
 ## 🧰 Production (VM)
 
+📖 **See [DEPLOYMENT.md](DEPLOYMENT.md)** for Docker, free hosting options, and auto-deploy workflows.
+
 - Run behind a WSGI server (recommended: gunicorn):
   ```bash
   pip install -r requirements.txt
