@@ -1,0 +1,39 @@
+[tool.ruff]
+# Exclude common directories
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    ".venv",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+# Same as Black's default line length
+line-length = 88
+
+# Target Python 3.12
+target-version = "py312"
+
+[tool.ruff.lint]
+# Enable essential rules only
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+]
+
+# Allow certain violations
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "E402",  # Module level import not at top of file (common in Flask apps)
+    "E722",  # Bare except (sometimes intentional for robustness)
+]
+
+[tool.ruff.format]
+# Use Black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

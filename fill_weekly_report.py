@@ -6,11 +6,12 @@ the YAML file and Word document automatically.
 """
 
 import os
-import yaml
-from pathlib import Path
-from datetime import datetime, timedelta
 import subprocess
 import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import yaml
 
 # Load .env so WEEKLY_REPORT_INPUT_FILE is available
 try:
@@ -111,7 +112,7 @@ def main():
     prev_data = {}
     if prev_file.exists():
         try:
-            with open(prev_file, "r", encoding="utf-8") as f:
+            with open(prev_file, encoding="utf-8") as f:
                 prev_data = yaml.safe_load(f) or {}
         except:
             pass
@@ -197,7 +198,7 @@ def main():
         sys.exit(1)
 
     try:
-        result = subprocess.run(
+        subprocess.run(
             [
                 sys.executable,
                 "generate_weekly_report_from_template.py",
@@ -219,7 +220,7 @@ def main():
         print("=" * 60)
 
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error generating Word document:")
+        print("❌ Error generating Word document:")
         print(e.stderr)
         sys.exit(1)
 

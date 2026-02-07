@@ -31,17 +31,14 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install flake8 black
+          pip install ruff
       
-      - name: Lint with flake8
+      - name: Lint and format check with ruff
         run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,__pycache__,.git
-          # Exit-zero treats all errors as warnings
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,__pycache__,.git
-      
-      - name: Check code formatting with black
-        run: black --check --exclude="venv|__pycache__|\.git" .
+          # Check for linting issues
+          ruff check . --output-format=github
+          # Check formatting (like black --check)
+          ruff format --check .
       
       - name: Verify Python modules import successfully
         run: |

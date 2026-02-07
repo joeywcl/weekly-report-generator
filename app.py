@@ -1,6 +1,6 @@
-from pathlib import Path
 import os
 import sys
+from pathlib import Path
 
 # Load .env so OPENAI_API_KEY is available (e.g. for AI assist)
 _env_dir = Path(__file__).resolve().parent
@@ -15,7 +15,7 @@ except ImportError:
 # Fallback: if key still not set (e.g. running without python-dotenv), parse .env manually
 if not os.environ.get("OPENAI_API_KEY", "").strip() and _env_file.exists():
     try:
-        with open(_env_file, "r", encoding="utf-8") as f:
+        with open(_env_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):
@@ -29,30 +29,33 @@ if not os.environ.get("OPENAI_API_KEY", "").strip() and _env_file.exists():
     except Exception:
         pass
 
+import json
+import re
+import subprocess
+import tempfile
+from datetime import datetime, timedelta
+
+import yaml
 from flask import (
     Flask,
+    after_this_request,
+    jsonify,
     render_template,
     request,
     send_file,
-    jsonify,
-    after_this_request,
 )
-import yaml
-import subprocess
-import json
-import re
-from datetime import datetime, timedelta
-import tempfile
 
 app = Flask(__name__)
+
 
 # Read version from VERSION file
 def get_version():
     try:
-        with open(Path(__file__).parent / "VERSION", "r") as f:
+        with open(Path(__file__).parent / "VERSION") as f:
             return f.read().strip()
     except:
         return "dev"
+
 
 __version__ = get_version()
 
@@ -499,7 +502,7 @@ def load_previous_data():
     yaml_file = get_input_yaml_path()
     if yaml_file.exists():
         try:
-            with open(yaml_file, "r", encoding="utf-8") as f:
+            with open(yaml_file, encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
         except:
             pass
@@ -763,7 +766,7 @@ TEXT FORMATTING (CRITICAL):
 CONTENT DEPTH:
 - weekly_objective: 12-20 words. Outcome-oriented (what was enabled/unblocked), not just ticket titles
 - execution_output: 2-5 items when notes cover multiple themes. Each item should have:
-  * summary: Specific header like "AI Canvas - AI Insights Display" or "Knowledge Base Management Page"  
+  * summary: Specific header like "AI Canvas - AI Insights Display" or "Knowledge Base Management Page"
   * content: 1-2 concise paragraphs (2-3 sentences each, ~40-60 words) + 2-4 bullets for key details. Focus on WHAT was done and WHY. Use bullets for implementation specifics, features, or caveats.
 - ai_acceleration_tasks: Keep task descriptions concise. For workflows like "Figma → Cursor MCP → code", explain in 1-2 sentences
 - Preserve key details from notes: node types, API vs mock, timeline caveats, specific tools used
@@ -848,16 +851,21 @@ def api_suggest():
         notes = (data.get("notes") or "").strip()
         if not notes:
             return jsonify({"error": "Missing 'notes' in request body."}), 400
-        
+
         # Check style parameter: 'quick' (default) or 'detailed'
         style = (data.get("style") or "quick").strip().lower()
         if style == "detailed":
             system_prompt = SUGGEST_SYSTEM_DETAILED
-            user_prompt = "Transform these rough notes into a polished, professional engineering report:\n\n" + notes
+            user_prompt = (
+                "Transform these rough notes into a polished, professional engineering report:\n\n"
+                + notes
+            )
         else:
             system_prompt = SUGGEST_SYSTEM
-            user_prompt = "Extract and fill the report structure from these notes:\n\n" + notes
-        
+            user_prompt = (
+                "Extract and fill the report structure from these notes:\n\n" + notes
+            )
+
         client, err = _openai_client(data.get("api_key"))
         if err:
             return jsonify({"error": err}), 400
@@ -897,7 +905,6 @@ def api_improve():
         client, err = _openai_client(data.get("api_key"))
         if err:
             return jsonify({"error": err}), 400
-        field = data.get("field", "general")
         prompt = f"Rewrite the following for a weekly report: clearer, professional, concise. Keep bullets (lines starting with -) as-is. Return only the rewritten text, no explanation.\n\n{text}"
         response = client.chat.completions.create(
             model=data.get("model", "gpt-4o-mini"),
