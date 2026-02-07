@@ -682,13 +682,13 @@ def generate():
         if not Path(output_tmp_path).exists():
             return jsonify({"error": "Document generation failed"}), 500
 
-        # Filename: [CAP Weekly Report] Name.docx
+        # Filename: User-provided name.docx
         name_for_file = (data.get("name_for_file") or data["name"]).strip()
         safe_name = (
             "".join(c for c in name_for_file if c not in r'\/:*?"<>|').strip()
             or "Report"
         )
-        download_name = f"[CAP Weekly Report] {safe_name}.docx"
+        download_name = f"{safe_name}.docx"
 
         # Return the file for download
         return send_file(
@@ -701,6 +701,91 @@ def generate():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+SUGGEST_SYSTEM_DETAILED = """You help transform rough weekly notes into a polished, professional engineering report.
+
+Your goal: Generate a publication-ready report with narrative prose, clear context, and professional positioning.
+
+Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
+{
+  "weekly_objective": "one professional sentence summarizing what was achieved THIS WEEK (outcome-oriented, past tense)",
+  "execution_output": [{"summary": "Specific, report-ready header (e.g., 'AI Canvas - Frontend Setup & Core Implementation')", "content": "Professional narrative with context. Explain what was done, why it matters, how it was implemented. Use paragraphs for context and bullets (lines starting with -) for detailed items. Clearly distinguish completed work from prepared/staged work."}],
+  "ai_acceleration_tasks": [{"task": "Detailed description of what you used AI for", "tool_agent": "OpenCode / Cursor / Cursor (Composer) with Figma MCP / ...", "time_saved": "~0.5-2d or 1-4h", "insight_failure": "TEXT STRING with 2-3 bullets formatted as lines starting with - followed by space"}],
+  "next_week_focus": ["Specific focus with action verb (e.g., 'Integrate action handling for AI suggestions')"],
+  "friction_blockers_ask": [{"friction": "Professional description of blocker", "action_mitigation": "What you did to prepare/mitigate. Frame constructively: what's ready, what's waiting on dependencies.", "ask_attention_needed": "Specific request (only if explicitly mentioned in notes)"}],
+  "sop_items": [{"item": "SOP item name", "impact": "Professional description of impact with context"}]
+}
+
+CRITICAL - Text Formatting Rules:
+All text fields (content, insight_failure, impact, action_mitigation, ask_attention_needed) MUST be plain text strings, NOT arrays or lists.
+
+For bullet points, use this EXACT format:
+- First bullet text here
+- Second bullet text here
+- Third bullet text here
+
+NEVER use Python list syntax like ['item1', 'item2']. NEVER use JSON arrays for text content.
+
+Example of CORRECT insight_failure format:
+"insight_failure": "- Highly effective in bridging design intent and implementation when using Cursor Composer\n- Other agents were less reliable for this workflow, requiring fallback to Composer for consistent results"
+
+Example of WRONG format (DO NOT DO THIS):
+"insight_failure": "['First point', 'Second point']"
+
+WRITING STYLE - CRITICAL:
+- Write in professional, engineering-report tone suitable for management review
+- Use complete sentences and smooth narrative flow
+- For execution_output[].content: Write 2-3 concise sentences that explain WHAT was done and WHY it matters, then add bullets for details
+- Keep paragraphs tight: aim for 2-3 sentences maximum per paragraph (roughly 40-60 words)
+- Add professional context: "Integrated X to enable Y" not just "Integrated X"
+- Position work strategically: clearly separate "completed and integrated" from "frontend prepared, awaiting backend" or "UI established, pending data contracts"
+- Frame blockers constructively: emphasize what IS ready and what you've prepared, then note what's waiting on dependencies
+- Make the report immediately publishable without further editing
+- Be concise but comprehensive: avoid redundant explanations or over-elaboration
+
+TEXT FORMATTING (CRITICAL):
+- All text fields are STRINGS, not arrays or lists
+- For bullets, use actual line breaks with "- " prefix (newline character: \n)
+- Example: "First paragraph.\n- Bullet one\n- Bullet two\nClosing paragraph."
+- NEVER return Python list syntax like ['item1', 'item2']
+- NEVER return JSON arrays in place of text strings
+
+CONTENT DEPTH:
+- weekly_objective: 12-20 words. Outcome-oriented (what was enabled/unblocked), not just ticket titles
+- execution_output: 2-5 items when notes cover multiple themes. Each item should have:
+  * summary: Specific header like "AI Canvas - AI Insights Display" or "Knowledge Base Management Page"  
+  * content: 1-2 concise paragraphs (2-3 sentences each, ~40-60 words) + 2-4 bullets for key details. Focus on WHAT was done and WHY. Use bullets for implementation specifics, features, or caveats.
+- ai_acceleration_tasks: Keep task descriptions concise. For workflows like "Figma → Cursor MCP → code", explain in 1-2 sentences
+- Preserve key details from notes: node types, API vs mock, timeline caveats, specific tools used
+- Avoid repetition: if the summary says "Knowledge Base Page", don't repeat "knowledge base page" 3 times in content
+
+TIME CLASSIFICATION:
+- weekly_objective and execution_output: ONLY past/current week work (what was done or achieved)
+- next_week_focus: ONLY future plans explicitly marked as "next week", "upcoming", "will", "to do", "plan"
+- If timing is ambiguous, assume it belongs to THIS WEEK
+
+FORMATTING:
+- Paragraphs: normal sentences (no leading markers)
+- Bullets: Start line with "- " for bullet points
+- Never write inline bullets like "Sentence. - Bullet". Always: "Sentence.\n- Bullet"
+
+ASKS & INSIGHTS:
+- Do NOT invent asks. Only include ask_attention_needed if notes explicitly state a request
+- AI tasks: Always provide meaningful insight_failure (2-3 bullets) showing what worked and limitations
+- For action_mitigation: If notes don't provide explicit action, infer mild coordination (aligned with backend, coordinated with team, etc.)
+
+CORRECT insight_failure examples (use these as templates):
+Example 1: "- Highly effective in bridging design intent and implementation when using Cursor Composer\n- Other agents were less reliable for this workflow, requiring fallback to Composer for consistent results"
+Example 2: "- Helpful for accelerating UI integration and layout iteration\n- Manual validation still required to ensure insight presentation aligns with backend data semantics"
+Example 3: "- Effective for quickly scaffolding API usage patterns\n- Backend dependency remains for file preview and download via S3 endpoints"
+
+CORRECT execution_output[].content example (concise but professional):
+"Developed a knowledge base management page enabling users to view, upload, and manage documents. This feature centralizes document handling and improves operational efficiency.
+- Implemented drag-and-drop file upload interface
+- Added file deletion capability
+- Prepared preview/download UI, pending S3 backend endpoints"
+
+Keep all arrays (execution_output, ai_acceleration_tasks, next_week_focus, friction_blockers_ask, sop_items) as proper arrays; use empty [] if nothing from notes."""
 
 SUGGEST_SYSTEM = """You help fill a weekly report from rough notes or Jira-style updates.
 Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
@@ -753,18 +838,24 @@ def api_suggest():
         notes = (data.get("notes") or "").strip()
         if not notes:
             return jsonify({"error": "Missing 'notes' in request body."}), 400
+        
+        # Check style parameter: 'quick' (default) or 'detailed'
+        style = (data.get("style") or "quick").strip().lower()
+        if style == "detailed":
+            system_prompt = SUGGEST_SYSTEM_DETAILED
+            user_prompt = "Transform these rough notes into a polished, professional engineering report:\n\n" + notes
+        else:
+            system_prompt = SUGGEST_SYSTEM
+            user_prompt = "Extract and fill the report structure from these notes:\n\n" + notes
+        
         client, err = _openai_client(data.get("api_key"))
         if err:
             return jsonify({"error": err}), 400
         response = client.chat.completions.create(
             model=data.get("model", "gpt-4o-mini"),
             messages=[
-                {"role": "system", "content": SUGGEST_SYSTEM},
-                {
-                    "role": "user",
-                    "content": "Extract and fill the report structure from these notes:\n\n"
-                    + notes,
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.3,
         )

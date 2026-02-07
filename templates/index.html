@@ -464,15 +464,89 @@
         
         .ai-suggest-result {
             margin-top: 12px;
-            padding: 12px;
+            padding: 16px;
             background: white;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
-            max-height: 200px;
+            max-height: 400px;
             overflow-y: auto;
         }
         
         .ai-suggest-result pre { font-size: 12px; margin: 0; white-space: pre-wrap; }
+        
+        .ai-preview-section {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ai-preview-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .ai-preview-title {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .ai-preview-content {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .ai-preview-item {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .ai-preview-item-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        
+        .ai-preview-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .ai-preview-toggle button {
+            background: #f0f0f0;
+            border: 1px solid #d0d0d0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .ai-preview-toggle button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .ai-preview-toggle button:hover {
+            background: #e0e0e0;
+        }
+        
+        .ai-preview-toggle button.active:hover {
+            background: #5568d3;
+        }
         .ai-error { color: #c62828; margin-top: 8px; }
         .ai-apply-row { margin-top: 10px; }
 
@@ -551,8 +625,20 @@
             
             <details class="ai-assist-section">
                 <summary>✨ AI Assist – suggest from notes or improve text</summary>
-                <p style="margin: 8px 0 4px; font-size: 13px; color: #555;">Paste ideas, or rough notes. AI will suggest content for the report fields. Requires <code>OPENAI_API_KEY</code> in your environment.</p>
-                <div class="ai-assist-hint">Tip: paste rough notes with simple headings (This week / Next week / Friction / Action / Ask / AI Acceleration). AI will structure it into the report fields.</div>
+                <p style="margin: 8px 0 4px; font-size: 13px; color: #555;">Paste ideas, or rough notes. AI will suggest content for the report fields.</p>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="ai-style-select">Report Style:</label>
+                    <select id="ai-style-select" style="max-width: 300px;">
+                        <option value="quick">Quick Structure (concise bullets)</option>
+                        <option value="detailed">Full Report (polished narrative)</option>
+                    </select>
+                    <small class="field-hint" style="margin-top: 4px; display: block;">
+                        <strong>Quick Structure:</strong> Fast extraction, concise bullets.<br>
+                        <strong>Full Report:</strong> Polished narrative with context—publication-ready, like ChatGPT output.
+                    </small>
+                </div>
+                <div class="ai-assist-hint">💡 <strong>Tip:</strong> Paste rough notes with simple headings (This week / Next week / Friction / AI Acceleration). Same notes work for both styles!</div>
+                <div class="ai-assist-hint">📝 <strong>When to use Full Report:</strong> Management reviews, detailed updates. Use Quick Structure for fast internal reports.</div>
                 <div class="ai-assist-hint">Note: blank fields show as <code>N/A</code> in the Word document. Bullets must start a new line with <code>-</code>.</div>
                 <textarea id="ai-notes" class="ai-assist-notes" placeholder="This week:
 - ...
@@ -571,7 +657,7 @@ Ask:
 Next week:
 - ..."></textarea>
                 <details class="ai-assist-example">
-                    <summary>Example notes template (copy/paste)</summary>
+                    <summary>Example notes template (copy/paste) — works for both styles</summary>
                     <pre id="ai-example-text">This week:
 - &lt;3-8 bullets: what you did / shipped&gt;
 - Link(s): &lt;PR / Jira / Figma / Docs&gt; (optional)
@@ -604,7 +690,13 @@ Execution &amp; Output:
                     <button type="button" class="btn-suggest" id="ai-suggest-btn">Suggest for report</button>
                     <span id="ai-suggest-status" style="margin-left: 10px; font-size: 13px; color: #666;"></span>
                 </div>
-                <div id="ai-suggest-result" class="ai-suggest-result" style="display: none;"></div>
+                <div id="ai-suggest-result-container" style="display: none;">
+                    <div class="ai-preview-toggle">
+                        <button type="button" id="ai-view-formatted" class="active">📄 Formatted</button>
+                        <button type="button" id="ai-view-json">{ } JSON</button>
+                    </div>
+                    <div id="ai-suggest-result" class="ai-suggest-result"></div>
+                </div>
                 <div id="ai-suggest-error" class="ai-error" style="display: none;"></div>
                 <div id="ai-apply-row" class="ai-apply-row" style="display: none;">
                     <button type="button" class="btn-suggest" id="ai-apply-btn">Apply to form</button>
@@ -628,8 +720,8 @@ Execution &amp; Output:
                     </div>
                     <div class="form-group">
                         <label for="name_for_file">Name for filename</label>
-                        <input type="text" id="name_for_file" name="name_for_file" value="{{ defaults.name_for_file }}" placeholder="e.g. Cheau Ling Wong">
-                        <small class="field-hint">Used in the downloaded file name. Leave blank to use your name above.</small>
+                        <input type="text" id="name_for_file" name="name_for_file" value="{{ defaults.name_for_file }}" placeholder="e.g. [CAP Weekly Report] Cheau Ling Wong">
+                        <small class="field-hint">Enter your desired filename (without .docx). Example: "[CAP Weekly Report] Cheau Ling Wong" or just "Cheau Ling Wong". Leave blank to use your name above.</small>
                     </div>
                     <div class="form-group">
                         <label for="week-calendar">Week *</label>
@@ -1409,13 +1501,140 @@ Execution &amp; Output:
         }
         
         let _aiSuggestion = null;
+        let _aiViewMode = 'formatted'; // 'formatted' or 'json'
+        
+        function renderAIPreviewFormatted(data) {
+            let html = '';
+            
+            // Weekly Objective
+            if (data.weekly_objective) {
+                html += '<div class="ai-preview-section">';
+                html += '<div class="ai-preview-title">Weekly Objective</div>';
+                html += '<div class="ai-preview-content">' + escapeHtml(data.weekly_objective) + '</div>';
+                html += '</div>';
+            }
+            
+            // Execution & Output
+            if (data.execution_output && data.execution_output.length > 0) {
+                html += '<div class="ai-preview-section">';
+                html += '<div class="ai-preview-title">Execution & Output (' + data.execution_output.length + ' items)</div>';
+                data.execution_output.forEach(function(item, idx) {
+                    html += '<div class="ai-preview-item">';
+                    if (item.summary) {
+                        html += '<div class="ai-preview-item-title">' + (idx + 1) + '. ' + escapeHtml(item.summary) + '</div>';
+                    }
+                    if (item.content) {
+                        html += '<div class="ai-preview-content">' + escapeHtml(item.content) + '</div>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+            
+            // AI Acceleration
+            if (data.ai_acceleration_tasks && data.ai_acceleration_tasks.length > 0) {
+                html += '<div class="ai-preview-section">';
+                html += '<div class="ai-preview-title">AI Acceleration (' + data.ai_acceleration_tasks.length + ' tasks)</div>';
+                data.ai_acceleration_tasks.forEach(function(task, idx) {
+                    html += '<div class="ai-preview-item">';
+                    html += '<div class="ai-preview-item-title">' + (idx + 1) + '. ' + escapeHtml(task.task || 'Task') + '</div>';
+                    if (task.tool_agent || task.time_saved) {
+                        html += '<div style="font-size: 12px; color: #666; margin-bottom: 6px;">';
+                        if (task.tool_agent) html += '<strong>Tool:</strong> ' + escapeHtml(task.tool_agent) + ' ';
+                        if (task.time_saved) html += '<strong>Time saved:</strong> ' + escapeHtml(task.time_saved);
+                        html += '</div>';
+                    }
+                    if (task.insight_failure) {
+                        html += '<div class="ai-preview-content" style="margin-top: 6px;">' + escapeHtml(task.insight_failure) + '</div>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+            
+            // Friction, Blockers & Ask
+            if (data.friction_blockers_ask && data.friction_blockers_ask.length > 0 && 
+                data.friction_blockers_ask.some(f => f.friction || f.action_mitigation || f.ask_attention_needed)) {
+                html += '<div class="ai-preview-section">';
+                html += '<div class="ai-preview-title">Friction, Blockers & Ask</div>';
+                data.friction_blockers_ask.forEach(function(item, idx) {
+                    if (item.friction || item.action_mitigation || item.ask_attention_needed) {
+                        html += '<div class="ai-preview-item">';
+                        if (item.friction) {
+                            html += '<div style="margin-bottom: 6px;"><strong>Friction:</strong> ' + escapeHtml(item.friction) + '</div>';
+                        }
+                        if (item.action_mitigation) {
+                            html += '<div style="margin-bottom: 6px;"><strong>Action:</strong> ' + escapeHtml(item.action_mitigation) + '</div>';
+                        }
+                        if (item.ask_attention_needed) {
+                            html += '<div><strong>Ask:</strong> ' + escapeHtml(item.ask_attention_needed) + '</div>';
+                        }
+                        html += '</div>';
+                    }
+                });
+                html += '</div>';
+            }
+            
+            // SOP & Process
+            if (data.sop_items && data.sop_items.length > 0 && 
+                data.sop_items.some(s => (s.item && s.item !== 'None') || (s.impact && s.impact !== 'N/A'))) {
+                html += '<div class="ai-preview-section">';
+                html += '<div class="ai-preview-title">SOP & Process Solidification</div>';
+                data.sop_items.forEach(function(item, idx) {
+                    if ((item.item && item.item !== 'None') || (item.impact && item.impact !== 'N/A')) {
+                        html += '<div class="ai-preview-item">';
+                        if (item.item) {
+                            html += '<div class="ai-preview-item-title">' + escapeHtml(item.item) + '</div>';
+                        }
+                        if (item.impact) {
+                            html += '<div class="ai-preview-content">' + escapeHtml(item.impact) + '</div>';
+                        }
+                        html += '</div>';
+                    }
+                });
+                html += '</div>';
+            }
+            
+            // Next Week Focus
+            if (data.next_week_focus && data.next_week_focus.length > 0) {
+                html += '<div class="ai-preview-section">';
+                html += '<div class="ai-preview-title">Next Week\'s Focus (' + data.next_week_focus.length + ' items)</div>';
+                html += '<div class="ai-preview-content">';
+                data.next_week_focus.forEach(function(focus, idx) {
+                    if (focus) {
+                        html += (idx + 1) + '. ' + escapeHtml(focus) + '\n';
+                    }
+                });
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            return html || '<div style="color: #999; font-style: italic;">No content generated</div>';
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+        
+        function renderAIPreview(data, mode) {
+            const resultDiv = document.getElementById('ai-suggest-result');
+            if (mode === 'json') {
+                resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } else {
+                resultDiv.innerHTML = renderAIPreviewFormatted(data);
+            }
+        }
         
         document.getElementById('ai-suggest-btn').addEventListener('click', async function() {
             const notes = document.getElementById('ai-notes').value.trim();
+            const style = document.getElementById('ai-style-select').value || 'quick';
             const btn = this;
             const status = document.getElementById('ai-suggest-status');
             const applyStatus = document.getElementById('ai-apply-status');
-            const resultDiv = document.getElementById('ai-suggest-result');
+            const resultContainer = document.getElementById('ai-suggest-result-container');
             const errDiv = document.getElementById('ai-suggest-error');
             const applyRow = document.getElementById('ai-apply-row');
             if (!notes) { errDiv.textContent = 'Enter some notes first.'; errDiv.style.display = 'block'; return; }
@@ -1424,19 +1643,41 @@ Execution &amp; Output:
             status.textContent = 'Calling AI...';
             if (applyStatus) applyStatus.textContent = '';
             try {
-                const res = await fetch('/api/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes }) });
+                const res = await fetch('/api/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes, style }) });
                 const data = await res.json();
-                if (!res.ok) { errDiv.textContent = data.error || 'Request failed'; errDiv.style.display = 'block'; resultDiv.style.display = 'none'; applyRow.style.display = 'none'; return; }
+                if (!res.ok) { errDiv.textContent = data.error || 'Request failed'; errDiv.style.display = 'block'; resultContainer.style.display = 'none'; applyRow.style.display = 'none'; return; }
                 _aiSuggestion = data;
-                resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-                resultDiv.style.display = 'block';
+                _aiViewMode = 'formatted';
+                renderAIPreview(data, _aiViewMode);
+                document.getElementById('ai-view-formatted').classList.add('active');
+                document.getElementById('ai-view-json').classList.remove('active');
+                resultContainer.style.display = 'block';
                 applyRow.style.display = 'block';
-                status.textContent = 'Done. Click Apply to form to fill.';
+                status.textContent = 'Done. Review below and click Apply to form.';
             } catch (e) {
                 errDiv.textContent = e.message || 'Network error';
                 errDiv.style.display = 'block';
             } finally {
                 btn.disabled = false;
+            }
+        });
+        
+        // Toggle between formatted and JSON view
+        document.getElementById('ai-view-formatted').addEventListener('click', function() {
+            if (_aiSuggestion) {
+                _aiViewMode = 'formatted';
+                renderAIPreview(_aiSuggestion, _aiViewMode);
+                this.classList.add('active');
+                document.getElementById('ai-view-json').classList.remove('active');
+            }
+        });
+        
+        document.getElementById('ai-view-json').addEventListener('click', function() {
+            if (_aiSuggestion) {
+                _aiViewMode = 'json';
+                renderAIPreview(_aiSuggestion, _aiViewMode);
+                this.classList.add('active');
+                document.getElementById('ai-view-formatted').classList.remove('active');
             }
         });
         

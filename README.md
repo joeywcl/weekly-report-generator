@@ -28,10 +28,40 @@ The easiest way to fill out your weekly report!
 
 ### ✨ AI Assist (optional)
 
-- Expand **"AI Assist"** at the top of the form.
-- **Suggest from notes:** Paste ideas, or rough notes and click **Suggest for report**. AI will propose content for Weekly Objective, Execution, Next Week's Focus, Friction, and SOP. Click **Apply to form** to fill the fields.
-- **Improve text:** Use the **Improve** button next to Weekly Objective to rewrite or summarize with AI.
-- Requires an OpenAI API key: set `OPENAI_API_KEY` in your environment before starting the app (e.g. `export OPENAI_API_KEY=sk-...`).
+Transform rough notes into structured reports with AI assistance.
+
+**Setup:** Requires an OpenAI API key: `export OPENAI_API_KEY=sk-...`
+
+**How to use:**
+
+1. **Expand "AI Assist"** at the top of the form
+2. **Choose your report style:**
+   - **Quick Structure** (default) - Fast extraction, concise bullets. Best for internal updates and quick reports.
+   - **Full Report** - Polished narrative with professional context. Best for management reviews, detailed updates, or when you want publication-ready formatting (like ChatGPT output).
+3. **Paste your rough notes** (bullets, Jira updates, meeting notes)
+4. **Click "Suggest for report"** - AI generates structured content
+5. **Review the formatted preview** - Toggle between formatted/JSON view
+6. **Click "Apply to form"** - Fields auto-fill with AI suggestions
+7. **Edit as needed** and generate your Word document
+
+**Example notes format:**
+```
+This week:
+- Integrated AI insights display
+- Created knowledge base management page
+
+AI Acceleration:
+- Cursor with Figma MCP: Designed KB page (~1 day)
+  - Insight: Worked great with Composer
+  - Limitation: Other agents less reliable
+
+Next week:
+- Integrate action handling for suggestions
+```
+
+**Additional features:**
+- **Improve text:** Rewrite or polish specific fields with AI
+- **Same notes work for both styles** - Choose Quick or Full Report based on your audience
 
 ### Draft persistence
 
@@ -97,6 +127,8 @@ The default `weekly_report_input_template.yaml` is a blank template; with the en
 ## ✨ Features
 
 - **Web interface** with modern, user-friendly design
+- **AI-powered report generation** with two styles (Quick Structure / Full Report)
+- **Formatted preview** of AI suggestions before applying
 - **Saves drafts locally in your browser** (localStorage)
 - **Auto-calculates week range** (Monday-Friday of current week)
 - **Dynamic lists** - Add/remove items easily
