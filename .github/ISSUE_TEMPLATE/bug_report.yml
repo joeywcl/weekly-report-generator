@@ -7,66 +7,80 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug.
+        Thanks for reporting a bug! Please fill out the sections below so we can fix it quickly.
 
   - type: textarea
     id: what_happened
     attributes:
-      label: What happened?
-      description: Describe the problem.
-      placeholder: "When I click Generate Word Document, I get an error..."
+      label: What went wrong?
+      description: Describe the problem in simple terms.
+      placeholder: "Example: When I click 'Generate Word Document', I see an error message and no file downloads."
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: What did you expect to happen?
-      placeholder: "A Word document downloads successfully."
+      label: What should happen instead?
+      description: What did you expect to happen?
+      placeholder: "Example: A Word document should download with my weekly report."
     validations:
       required: true
 
   - type: textarea
     id: steps
     attributes:
-      label: Steps to reproduce
-      description: Tell us how to reproduce the issue.
+      label: How to reproduce this
+      description: Tell us the exact steps so we can recreate the issue.
       placeholder: |
-        1. Go to ...
-        2. Fill ...
-        3. Click ...
-        4. See error
+        1. Go to the web form
+        2. Fill in Name and Role
+        3. Click "Generate Word Document"
+        4. See error: "Template file not found"
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Screenshots or error text (optional)
-      description: Paste any error message or attach a screenshot.
-      render: shell
+      label: Screenshots or error messages (if any)
+      description: Paste any error text you see, or attach a screenshot.
+      placeholder: "Paste error message here or drag a screenshot below"
     validations:
       required: false
 
   - type: dropdown
     id: area
     attributes:
-      label: Where did it happen?
+      label: Where did this happen?
       options:
-        - Web UI
-        - AI Assist
-        - Word (DOCX) generation
-        - CLI (fill_weekly_report.py)
-        - Deployment/Server
+        - Web UI (form in browser)
+        - AI Assist (suggest from notes)
+        - Word document generation/download
+        - Command line (Python scripts)
+        - Server/Deployment
         - Not sure
     validations:
       required: true
+  
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: How urgent is this?
+      description: Help us prioritize. Choose what best describes the impact.
+      options:
+        - Blocker - Can't use the app at all
+        - High - Major feature broken
+        - Medium - Annoying but has workaround
+        - Low - Minor issue, cosmetic
+    validations:
+      required: false
 
   - type: input
     id: environment
     attributes:
-      label: Environment (optional)
-      description: Browser/OS (for web bugs) or Python version (for CLI).
-      placeholder: "Chrome 121 on macOS" 
+      label: Environment details (optional)
+      description: Browser and OS (for web issues) or Python version (for CLI).
+      placeholder: "Example: Chrome on Mac, or Python 3.12 on Windows" 
     validations:
       required: false

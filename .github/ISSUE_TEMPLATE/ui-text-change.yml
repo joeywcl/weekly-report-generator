@@ -1,20 +1,24 @@
-name: UI Text / Placeholder Change
-description: Request a simple wording change in the web form.
-title: "UI: "
-labels: [ui]
+name: Quick Text Change
+description: Request a simple wording change in the web form (labels, buttons, hints).
+title: "Text: "
+labels: [ui, quick-fix]
 
 body:
   - type: markdown
     attributes:
       value: |
-        Use this when you want to change a label, placeholder, hint text, or button text.
+        Use this for simple text changes only (labels, placeholders, button text, hints).
+        
+        **Not sure if this is the right template?**
+        - For bugs or broken features → use **Bug Report**
+        - For new features or major changes → use **Feature Request**
 
   - type: input
     id: where
     attributes:
       label: Where is it on the page?
-      description: "For example: Basic Information section, or near the AI Assist panel."
-      placeholder: "Name for filename field (top section)"
+      description: "Help us find it quickly."
+      placeholder: 'Example: "Name for filename" field in the Basic Information section'
     validations:
       required: true
 
@@ -22,8 +26,8 @@ body:
     id: current
     attributes:
       label: What does it currently say?
-      description: "Copy the exact text you see (label/placeholder/hint/button)."
-      placeholder: "e.g. FirstName LastName"
+      description: "Copy the exact text you see."
+      placeholder: 'Example: Enter your desired filename'
     validations:
       required: true
 
@@ -31,24 +35,33 @@ body:
     id: desired
     attributes:
       label: What should it say instead?
-      placeholder: "e.g. FirstName LastName"
+      placeholder: 'Example: Filename for the Word document (without .docx)'
     validations:
       required: true
+  
+  - type: textarea
+    id: why
+    attributes:
+      label: Why change it? (optional)
+      description: "Help us understand the improvement."
+      placeholder: "Example: Current text is confusing because users don't know if they need to add .docx"
+    validations:
+      required: false
 
   - type: checkboxes
     id: constraints
     attributes:
-      label: Constraints
-      description: "Optional, but helps keep changes small."
+      label: Confirm this is a simple text change
+      description: "Check all that apply (helps keep the change small and fast)."
       options:
-        - label: Wording/UI text only (no behavior changes)
-        - label: No changes to report output formatting
-        - label: No changes outside this page/section
+        - label: Wording/text only (no changes to functionality)
+        - label: No changes to the Word document output
+        - label: No changes outside this specific field/section
 
   - type: textarea
     id: notes
     attributes:
       label: Anything else?
-      description: Links/screenshots, or other context.
+      description: Screenshot, links, or other context.
     validations:
       required: false

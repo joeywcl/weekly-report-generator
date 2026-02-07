@@ -1,0 +1,61 @@
+name: Question / Help
+description: Ask a question about how to use the weekly report generator.
+title: "Question: "
+labels: [question]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got a question? We're here to help!
+        
+        **Quick tips:**
+        - Check the [README](../README.md) first for common setup questions
+        - For bugs or feature requests, use those templates instead
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What's your question?
+      description: Ask away! No question is too simple.
+      placeholder: |
+        Example questions:
+        - How do I use the AI Assist feature?
+        - What's the difference between Quick Structure and Full Report?
+        - How do I set up my OpenAI API key?
+        - Can I customize the Word document format?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What have you tried? (optional)
+      description: Help us understand what you've already looked at or attempted.
+      placeholder: "Example: I tried clicking AI Assist but nothing happens."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: What topic is this about?
+      options:
+        - Getting started / Setup
+        - Using the web form
+        - AI Assist feature
+        - Word document output
+        - Command line tools
+        - Deployment / Server setup
+        - Other / Not sure
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Quick checks
+      description: "Have you checked these resources?"
+      options:
+        - label: I've read the README
+        - label: This isn't already covered in the documentation

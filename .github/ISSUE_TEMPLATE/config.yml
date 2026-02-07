@@ -1,1 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/YOUR_USERNAME/weekly/blob/main/README.md
+    about: Read the README for setup instructions and feature guides
+  - name: 💬 Discussions
+    url: https://github.com/YOUR_USERNAME/weekly/discussions
+    about: General questions, ideas, or show & tell (if discussions enabled)

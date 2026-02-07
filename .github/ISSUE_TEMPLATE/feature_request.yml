@@ -7,56 +7,81 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the suggestion.
+        Thanks for the suggestion! Help us understand what you need.
 
   - type: textarea
     id: problem
     attributes:
       label: What problem are you trying to solve?
-      description: Why is this feature needed?
-      placeholder: "It is hard to ..."
+      description: Describe the challenge or pain point.
+      placeholder: "Example: It takes too long to format my execution items because I have to manually add bullets."
     validations:
       required: true
 
   - type: textarea
     id: proposal
     attributes:
-      label: Proposed solution
-      description: What should the product do?
-      placeholder: "Add a button that ..."
+      label: What should the feature do?
+      description: Describe your ideal solution.
+      placeholder: "Example: Add a button that auto-formats bullets when I paste text."
     validations:
       required: true
 
   - type: textarea
     id: acceptance
     attributes:
-      label: Acceptance criteria
-      description: What would make this feature complete?
+      label: What would make this complete?
+      description: List the key things this feature needs to have. (Think of it as a checklist.)
       placeholder: |
-        - ...
-        - ...
+        Example:
+        - Button appears next to each text field
+        - When clicked, text is automatically formatted with bullets
+        - Works on all execution and AI acceleration fields
     validations:
       required: true
 
   - type: textarea
+    id: example
+    attributes:
+      label: Example or mockup (optional)
+      description: Show us what it would look like. Paste text, attach a sketch, or link to a similar feature elsewhere.
+      placeholder: "Before: [paste text]\nAfter: [what you want to see]"
+    validations:
+      required: false
+
+  - type: textarea
     id: out_of_scope
     attributes:
-      label: Out of scope (optional)
-      description: What should NOT change?
-      placeholder: "Do not change report output format" 
+      label: What should NOT change? (optional)
+      description: Are there parts of the app that should stay the same?
+      placeholder: "Example: Don't change how the Word document looks, only change the web form." 
     validations:
       required: false
 
   - type: dropdown
     id: area
     attributes:
-      label: Area
+      label: Which part of the app?
       options:
-        - Web UI
-        - AI Assist
-        - Word (DOCX) generation
-        - CLI
-        - Deployment/Server
+        - Web UI (form in browser)
+        - AI Assist (suggest from notes)
+        - Word document output/format
+        - Command line tools
+        - Server/Deployment
+        - Multiple areas
         - Other
     validations:
       required: true
+  
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      description: Help us prioritize. Be honest!
+      options:
+        - Critical - Blocking my work
+        - High - Would save me significant time
+        - Medium - Nice to have
+        - Low - Small improvement
+    validations:
+      required: false
