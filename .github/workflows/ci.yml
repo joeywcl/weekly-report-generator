@@ -1,0 +1,73 @@
+name: CI Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 black
+      
+      - name: Lint with flake8
+        run: |
+          # Stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,__pycache__,.git
+          # Exit-zero treats all errors as warnings
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,__pycache__,.git
+      
+      - name: Check code formatting with black
+        run: black --check --exclude="venv|__pycache__|\.git" .
+      
+      - name: Verify Python modules import successfully
+        run: |
+          python -m py_compile app.py
+          python -m py_compile generate_weekly_report_from_template.py
+          python -m py_compile fill_weekly_report.py
+          python -c "import app; print('✓ app.py imports successfully')"
+          python -c "import generate_weekly_report_from_template; print('✓ generate_weekly_report_from_template.py imports successfully')"
+          python -c "import fill_weekly_report; print('✓ fill_weekly_report.py imports successfully')"
+      
+      - name: Check for VERSION file
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "❌ VERSION file is missing"
+            exit 1
+          fi
+          echo "✓ VERSION file exists: $(cat VERSION)"
+      
+      - name: Verify Flask app can initialize
+        env:
+          OPENAI_API_KEY: "test-key-for-ci"
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from app import app
+          with app.app_context():
+              print('✓ Flask app initializes successfully')
+          "
